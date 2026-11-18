@@ -13,6 +13,6 @@ public class Item
     public string? Description { get; set; }
     public ItemStatus Status { get; set; }
 
-    // Filled in by the database (now()) on insert: see AppDbContext.
+    // Filled in by the database (CURRENT_TIMESTAMP(6)) on insert: see AppDbContext.
     public DateTime CreatedAt { get; set; }
 }

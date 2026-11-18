@@ -10,7 +10,10 @@ var connectionString = builder.Configuration.GetConnectionString("Default")
     ?? throw new InvalidOperationException(
         "Missing connection string: set ConnectionStrings:Default (see the README).");
 
-builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+builder.Services.AddDbContext<AppDbContext>(options => options.UseMySql(
+    connectionString,
+    // Explicit server version: AutoDetect would need a reachable database when running migrations.
+    new MySqlServerVersion(new Version(8, 4))));
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
