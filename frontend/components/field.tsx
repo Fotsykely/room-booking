@@ -38,7 +38,16 @@ export function TextAreaField({ label, hint, optional, errors, ...textarea }: Fi
 export function SelectField({ label, hint, optional, errors, ...select }: FieldProps & ComponentProps<"select">) {
   return (
     <FieldShell label={label} name={select.name} hint={hint} optional={optional} errors={errors}>
-      <select className={controlClassName(errors)} {...controlAttributes(select.name, hint, errors)} {...select} />
+      {/* The key makes React rebuild the <select> when its default changes. React resets a form after each Server
+          Action, but it does not update the selected option of a <select> that is already on screen when
+          defaultValue changes: without a new key, a failed submission would send the list back to its first
+          option and the user's choice would be lost. Text inputs do not have this problem. */}
+      <select
+        key={String(select.defaultValue ?? "")}
+        className={controlClassName(errors)}
+        {...controlAttributes(select.name, hint, errors)}
+        {...select}
+      />
     </FieldShell>
   );
 }
