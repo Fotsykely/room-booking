@@ -27,11 +27,6 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
   return (await response.json()) as T;
 }
 
-// For responses without a body (DELETE answers 204 No Content).
-export async function apiFetchNoContent(path: string, init: RequestInit = {}): Promise<void> {
-  await sendRequest(path, init);
-}
-
 export function jsonRequest(method: "POST" | "PUT", body: unknown): RequestInit {
   return { method, body: JSON.stringify(body) };
 }
