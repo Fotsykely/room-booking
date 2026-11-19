@@ -11,6 +11,11 @@
   --color-primary-subtle: #eeedfc;
   --color-on-primary: #ffffff;
 
+  /* Alert (warning): burnt amber, for an action that needs attention without destroying anything.
+     Darker than the usual amber on purpose: the hover state lightens the background by 10%, and white
+     text must stay above a 4.5:1 contrast there too (5.7:1 at rest, 4.7:1 on hover). */
+  --color-alert: #a84c0a;
+
   --color-background: #f8f9fb;
   --color-surface: #ffffff;
   --color-foreground: #1e293b;
