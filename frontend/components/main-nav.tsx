@@ -5,6 +5,8 @@ import { navLinkClassName } from "./nav-link-style";
 
 const NAV_ITEMS = [
   { href: "/", label: "Salles", alsoActiveFor: ["/rooms"] },
+  { href: "/planning", label: "Planning", alsoActiveFor: [] },
+  { href: "/reservations/new", label: "Réserver", alsoActiveFor: [] },
   { href: "/members", label: "Membres", alsoActiveFor: [] },
 ];
 

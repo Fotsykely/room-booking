@@ -8,6 +8,9 @@ type ButtonVariant = ComponentProps<typeof Button>["variant"];
 
 type ConfirmActionProps = {
   triggerLabel: string;
+  // Full name of the trigger for screen readers, when several triggers sit on one page ("Annuler" alone would not
+  // tell which reservation). It must start with the visible text.
+  triggerAriaLabel?: string;
   title: string;
   description: string;
   confirmLabel: string;
@@ -29,6 +32,7 @@ type ConfirmActionProps = {
 // A button that asks for confirmation in a native modal <dialog> before running a Server Action.
 export function ConfirmAction({
   triggerLabel,
+  triggerAriaLabel,
   title,
   description,
   confirmLabel,
@@ -48,7 +52,7 @@ export function ConfirmAction({
       <Button
         type="button"
         variant={triggerVariant}
-        aria-label={iconOnly ? triggerLabel : undefined}
+        aria-label={iconOnly ? triggerLabel : triggerAriaLabel}
         onClick={() => dialogRef.current?.showModal()}
       >
         {icon}

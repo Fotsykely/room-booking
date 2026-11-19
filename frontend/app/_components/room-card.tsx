@@ -1,4 +1,4 @@
-import { Building2, Pencil, Users, Wrench } from "lucide-react";
+import { Building2, CalendarPlus, Pencil, Users, Wrench } from "lucide-react";
 import { Badge } from "@/components/badge";
 import { ButtonLink } from "@/components/button";
 import type { Room } from "@/lib/api-client/types";
@@ -37,7 +37,15 @@ export function RoomCard({ room }: { room: Room }) {
         )}
       </ul>
 
-      <div className="mt-auto pt-1">
+      <div className="mt-auto flex flex-wrap gap-2 pt-1">
+        {/* An inactive room cannot be booked any more: no button, the badge says why. */}
+        {room.isActive && (
+          <ButtonLink href={`/reservations/new?roomId=${room.id}`}>
+            <CalendarPlus aria-hidden className="size-4" />
+            Réserver
+            <span className="sr-only"> {room.name}</span>
+          </ButtonLink>
+        )}
         <ButtonLink href={`/rooms/${room.id}/edit`} variant="secondary">
           <Pencil aria-hidden className="size-4" />
           Modifier
