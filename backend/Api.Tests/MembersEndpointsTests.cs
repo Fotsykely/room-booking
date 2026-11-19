@@ -69,6 +69,29 @@ public class MembersEndpointsTests(ApiFactory factory)
         Assert.True((await response.ReadFieldErrorsAsync()).ContainsKey("Email"));
     }
 
+    [Theory]
+    [InlineData(7)]      // a number that matches no subscription
+    [InlineData(-1)]
+    [InlineData("Foo")]  // an unknown name
+    public async Task Creating_a_member_with_an_unknown_subscription_answers_400(object subscription)
+    {
+        var response = await _client.PostAsJsonAsync("/api/members",
+            new { name = "Test", email = UniqueEmail(), subscription });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task An_unknown_subscription_number_is_reported_on_the_Subscription_field()
+    {
+        var response = await _client.PostAsJsonAsync("/api/members",
+            new { name = "Test", email = UniqueEmail(), subscription = 7 });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var errors = await response.ReadFieldErrorsAsync();
+        Assert.Equal(["L'abonnement doit être Standard ou Premium."], errors["Subscription"]);
+    }
+
     [Fact]
     public async Task Creating_a_member_with_an_existing_email_answers_400_whatever_the_case()
     {

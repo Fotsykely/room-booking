@@ -27,7 +27,9 @@ public class MemberRequestDto
         set => _email = value?.Trim();
     }
 
-    // The enum is checked by the JSON deserializer: an unknown subscription is a 400 as well.
+    // Checked twice: the JSON deserializer refuses an unknown name ("Foo"), and EnumDataType refuses
+    // a number that matches no subscription (7), which the deserializer accepts.
+    [EnumDataType(typeof(SubscriptionType), ErrorMessage = "L'abonnement doit être Standard ou Premium.")]
     public SubscriptionType Subscription { get; set; } = SubscriptionType.Standard;
 }
 
