@@ -14,6 +14,9 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseMySql(
     connectionString,
     // Explicit server version: AutoDetect would need a reachable database when running migrations.
     new MySqlServerVersion(new Version(8, 4))));
+// "Now" always comes from this clock (never DateTime.Now), so tests can replace it with a fake one.
+builder.Services.AddSingleton(TimeProvider.System);
+
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
@@ -30,7 +33,7 @@ await using (var scope = app.Services.CreateAsyncScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
-    await DemoDataSeeder.SeedAsync(db);
+    await DemoDataSeeder.SeedAsync(db, scope.ServiceProvider.GetRequiredService<TimeProvider>());
 }
 
 app.UseExceptionHandler();
