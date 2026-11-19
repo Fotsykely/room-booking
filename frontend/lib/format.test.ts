@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatCapacity, formatFloor, getRoomStatus } from "./format";
+import { formatCapacity, formatDay, formatFloor, formatPeriod, formatTime, getRoomStatus } from "./format";
 
 describe("room status", () => {
   it("is inactive whatever the availability, because an inactive room cannot be booked", () => {
@@ -23,6 +23,26 @@ describe("formatFloor", () => {
     [-2, "Sous-sol 2"],
   ])("writes floor %i as %s", (floor, expected) => {
     expect(formatFloor(floor)).toBe(expected);
+  });
+});
+
+describe("dates and times", () => {
+  it("reads the time from the text, without converting anything", () => {
+    expect(formatTime("2026-11-20T14:05:00")).toBe("14:05");
+    expect(formatTime("2026-11-20T09:00:00.123")).toBe("09:00");
+  });
+
+  it("writes a day in full, from a day or from a date and time", () => {
+    expect(formatDay("2026-11-20")).toBe("vendredi 20 novembre 2026");
+    expect(formatDay("2026-11-20T23:30:00")).toBe("vendredi 20 novembre 2026");
+  });
+
+  it("writes the period of a booking within one day as two times", () => {
+    expect(formatPeriod("2026-11-20T14:00:00", "2026-11-20T15:30:00")).toBe("14:00 – 15:30");
+  });
+
+  it("adds the end day when the booking runs past midnight", () => {
+    expect(formatPeriod("2026-11-20T23:00:00", "2026-11-21T01:00:00")).toBe("23:00 – 01:00 (le 21 nov. 2026)");
   });
 });
 

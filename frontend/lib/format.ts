@@ -31,6 +31,25 @@ export function formatFloor(floor: number): string {
   return floor === 1 ? "1er étage" : `${floor}e étage`;
 }
 
+const dayFormatter = new Intl.DateTimeFormat("fr-FR", { dateStyle: "full" });
+
+// "2026-11-20" or "2026-11-20T14:00:00" -> "vendredi 20 novembre 2026". Only the day is read: the API sends
+// local times without offset, so nothing is converted.
+export function formatDay(isoDate: string): string {
+  return dayFormatter.format(new Date(`${isoDate.slice(0, 10)}T00:00:00`));
+}
+
+// "2026-11-20T14:00:00" -> "14:00", read from the text for the same reason.
+export function formatTime(isoDateTime: string): string {
+  return isoDateTime.slice(11, 16);
+}
+
+// "14:00 – 15:00", with the end day added when the booking runs past midnight.
+export function formatPeriod(startsAt: string, endsAt: string): string {
+  const period = `${formatTime(startsAt)} – ${formatTime(endsAt)}`;
+  return startsAt.slice(0, 10) === endsAt.slice(0, 10) ? period : `${period} (le ${formatDate(endsAt)})`;
+}
+
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" });
 
 // Accepts a full ISO date and time ("2026-11-17T15:39:33Z") or a plain date ("2026-12-31").
