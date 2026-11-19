@@ -13,7 +13,8 @@ public record BookingResult(Reservation? Reservation, IReadOnlyDictionary<string
 // field, keyed by the field names of ReservationRequestDto, and the controller sends them as a usual 400.
 public class ReservationService(AppDbContext db, TimeProvider time)
 {
-    public static readonly TimeSpan MaxDuration = TimeSpan.FromHours(4);
+    public static readonly TimeSpan MaxDuration = TimeSpan.FromHours(5);
+    public static readonly TimeSpan MinDuration = TimeSpan.FromHours(2);
     public const int StandardMemberUpcomingLimit = 3;
 
     private const string MemberField = nameof(ReservationRequestDto.MemberId);
@@ -89,6 +90,8 @@ public class ReservationService(AppDbContext db, TimeProvider time)
             errors[EndField] = "La fin doit être après le début.";
         else if (endsAt - startsAt > MaxDuration)
             errors[EndField] = $"Une réservation dure au maximum {MaxDuration.TotalHours:0} heures.";
+        else if (endsAt - startsAt < MinDuration)
+            errors[EndField] = $"Une réservation dure au minimum {MinDuration.TotalHours:0} heures.";
     }
 
     // Periods are half-open [start, end): a reservation ending at 14:00 does not overlap one starting at 14:00.
