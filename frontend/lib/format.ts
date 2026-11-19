@@ -1,11 +1,4 @@
-import type { ItemStatus } from "./api-client/types";
-
 // Texts shown to users stay in French; identifiers and comments stay in English.
-export const STATUS_LABELS: Record<ItemStatus, string> = {
-  Draft: "Brouillon",
-  Active: "Actif",
-  Archived: "Archivé",
-};
 
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" });
 
