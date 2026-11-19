@@ -1,5 +1,8 @@
+using Api.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.MySql;
 
 namespace Api.Tests;
@@ -11,15 +14,29 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly MySqlContainer _database = new MySqlBuilder("mysql:8.4").Build();
 
+    // The API reads "now" from this clock: a test sets it to check time-dependent behaviour.
+    public TestClock Clock { get; } = new();
+
     // Explicit implementations: WebApplicationFactory already has its own ValueTask-returning DisposeAsync.
     Task IAsyncLifetime.InitializeAsync() => _database.StartAsync();
 
     Task IAsyncLifetime.DisposeAsync() => _database.DisposeAsync().AsTask();
 
+    // Runs code directly against the test database, to prepare data that the API cannot create
+    // (a reservation in the past, for example).
+    public async Task UseDbAsync(Func<AppDbContext, Task> action)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        await action(scope.ServiceProvider.GetRequiredService<AppDbContext>());
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         // UseSetting is read by Program.cs before the app is built, unlike ConfigureAppConfiguration.
         builder.UseSetting("ConnectionStrings:Default", _database.GetConnectionString());
+
+        // Registered after Program.cs, so this clock replaces TimeProvider.System.
+        builder.ConfigureTestServices(services => services.AddSingleton<TimeProvider>(Clock));
     }
 }
 
