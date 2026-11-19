@@ -1,4 +1,5 @@
 using Api.Data;
+using Api.Services;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
@@ -16,6 +17,9 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseMySql(
     new MySqlServerVersion(new Version(8, 4))));
 // "Now" always comes from this clock (never DateTime.Now), so tests can replace it with a fake one.
 builder.Services.AddSingleton(TimeProvider.System);
+
+// The booking rules (period, overlap, limit of upcoming reservations): see ReservationService.
+builder.Services.AddScoped<ReservationService>();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
