@@ -17,8 +17,9 @@ public static class DemoDataSeeder
         var today = now.Date;
         DateTime At(int dayOffset, int hour, int minute = 0) => today.AddDays(dayOffset).AddHours(hour).AddMinutes(minute);
 
-        // Last half-hour mark (14:37 -> 14:30). The ongoing reservation runs from 30 minutes before it to
-        // 60 minutes after it, so "now" is always inside, whatever the time of the day.
+        // Last half-hour mark (14:37 -> 14:30). The ongoing reservation runs from 2 hours before it to 2 hours
+        // after it (the 4 hours a booking may last): "now" is always inside, whatever the time of the day, and the
+        // room stays occupied for at least 2 hours after the first launch.
         var halfHour = today.AddHours(now.Hour).AddMinutes(now.Minute < 30 ? 0 : 30);
 
         var baobab = new Room { Name = "Salle Baobab", Capacity = 4, Floor = 0, Equipment = "Écran, tableau blanc" };
@@ -49,7 +50,7 @@ public static class DemoDataSeeder
             Book(vanille, faly, At(-1, 10), At(-1, 11, 30), "Entretien client"),
 
             // Ongoing: the room shows as "occupied" on the list
-            Book(zebu, faly, halfHour.AddMinutes(-30), halfHour.AddMinutes(60), "Revue de sprint"),
+            Book(zebu, faly, halfHour.AddHours(-2), halfHour.AddHours(2), "Revue de sprint"),
 
             // Upcoming
             Book(baobab, hery, At(1, 9), At(1, 10), "Point hebdomadaire"),
