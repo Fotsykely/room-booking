@@ -21,6 +21,13 @@
   --color-destructive: #dc2626;
   --color-ring: #5b4fd6;
 
+  /* Badges: dark text on a light background of the same hue (contrast above 4.5:1). */
+  --color-success: #166534;
+  --color-success-subtle: #dcfce7;
+  --color-danger: #991b1b;
+  --color-danger-subtle: #fee2e2;
+  --color-muted-subtle: #f1f5f9;
+
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
 
   --radius-lg: 10px;

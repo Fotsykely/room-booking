@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import Link from "next/link";
+import { MainNav } from "@/components/main-nav";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -8,10 +9,11 @@ const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
 });
 
-// Replace the application name here and in the header below.
+const APP_NAME = "Réservation de salles";
+
 export const metadata: Metadata = {
-  title: { default: "Mon application", template: "%s · Mon application" },
-  description: "Application construite à partir du template Next.js + .NET.",
+  title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
+  description: "Réservez une salle de réunion de l'espace de coworking et consultez le planning.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -25,13 +27,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           Aller au contenu
         </a>
         <header className="border-b border-border bg-surface">
-          <div className="mx-auto flex w-full max-w-3xl items-center px-4 py-3">
-            <Link href="/" className="text-lg font-semibold">
-              Mon application
+          <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-6 gap-y-1 px-4 py-2">
+            <Link href="/" className="inline-flex min-h-11 items-center text-lg font-semibold">
+              {APP_NAME}
             </Link>
+            <MainNav />
           </div>
         </header>
-        <main id="main-content" className="mx-auto w-full max-w-3xl px-4 py-6 lg:py-10">
+        <main id="main-content" className="mx-auto w-full max-w-5xl px-4 py-6 lg:py-10">
           {children}
         </main>
       </body>

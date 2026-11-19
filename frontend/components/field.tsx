@@ -43,6 +43,29 @@ export function SelectField({ label, hint, optional, errors, ...select }: FieldP
   );
 }
 
+// A single checkbox. The control sits before its label, so it has its own layout instead of FieldShell's.
+export function CheckboxField({
+  label,
+  hint,
+  errors,
+  ...input
+}: Omit<FieldProps, "optional"> & ComponentProps<"input">) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={input.name} className="flex min-h-11 items-center gap-3 text-sm font-semibold">
+        <input
+          type="checkbox"
+          className="size-5 shrink-0 accent-primary"
+          {...controlAttributes(input.name, hint, errors)}
+          {...input}
+        />
+        {label}
+      </label>
+      <FieldMessages name={input.name} hint={hint} errors={errors} />
+    </div>
+  );
+}
+
 // Message for an error that belongs to the whole form rather than to one field.
 export function FormError({ children }: { children: ReactNode }) {
   return (
@@ -61,6 +84,15 @@ function FieldShell({ label, name, hint, optional, errors, children }: FieldProp
         {optional && <span className="font-normal text-muted-foreground"> (facultatif)</span>}
       </label>
       {children}
+      <FieldMessages name={name} hint={hint} errors={errors} />
+    </div>
+  );
+}
+
+// The hint and the error messages under a control. Their ids are the ones aria-describedby points to.
+function FieldMessages({ name, hint, errors }: Pick<FieldProps, "name" | "hint" | "errors">) {
+  return (
+    <>
       {hint && (
         <p id={`${name}-hint`} className="text-sm text-muted-foreground">
           {hint}
@@ -73,7 +105,7 @@ function FieldShell({ label, name, hint, optional, errors, children }: FieldProp
           ))}
         </div>
       )}
-    </div>
+    </>
   );
 }
 
