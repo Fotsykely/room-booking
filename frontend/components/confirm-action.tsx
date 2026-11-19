@@ -1,30 +1,45 @@
 "use client";
 
-import { useId, useRef } from "react";
-import { Trash2 } from "lucide-react";
+import { useId, useRef, type ComponentProps, type ReactNode } from "react";
 import { Button } from "@/components/button";
 import { SubmitButton } from "@/components/submit-button";
 
-type ConfirmDeleteProps = {
+type ButtonVariant = ComponentProps<typeof Button>["variant"];
+
+type ConfirmActionProps = {
   triggerLabel: string;
   title: string;
   description: string;
   confirmLabel: string;
-  // Server Action bound to the id of the item to delete.
+  // Shown on the confirm button while the action runs ("Annulation…").
+  pendingLabel: string;
+  // Text of the button that closes the dialog without acting. It must not be confused with the action itself:
+  // for "cancel a reservation", "Annuler" would be ambiguous, so the caller says "Garder la réservation".
+  dismissLabel?: string;
+  icon: ReactNode;
+  // Server Action bound to the id of the thing to act on.
   action: (formData: FormData) => Promise<void>;
+  // The button that opens the dialog, and the one that confirms.
+  triggerVariant?: ButtonVariant;
+  confirmVariant?: ButtonVariant;
   // Icon-only trigger for compact rows; the label stays available to screen readers.
   iconOnly?: boolean;
 };
 
-// A delete button that asks for confirmation in a native modal <dialog> before submitting.
-export function ConfirmDelete({
+// A button that asks for confirmation in a native modal <dialog> before running a Server Action.
+export function ConfirmAction({
   triggerLabel,
   title,
   description,
   confirmLabel,
+  pendingLabel,
+  dismissLabel = "Annuler",
+  icon,
   action,
+  triggerVariant = "danger",
+  confirmVariant = "destructive",
   iconOnly = false,
-}: ConfirmDeleteProps) {
+}: ConfirmActionProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
 
@@ -32,11 +47,11 @@ export function ConfirmDelete({
     <>
       <Button
         type="button"
-        variant="danger"
+        variant={triggerVariant}
         aria-label={iconOnly ? triggerLabel : undefined}
         onClick={() => dialogRef.current?.showModal()}
       >
-        <Trash2 aria-hidden className="size-4" />
+        {icon}
         {!iconOnly && triggerLabel}
       </Button>
 
@@ -51,11 +66,11 @@ export function ConfirmDelete({
           </h2>
           <p className="text-muted-foreground">{description}</p>
           <div className="flex flex-wrap gap-3">
-            <SubmitButton variant="destructive" pendingLabel="Suppression…">
+            <SubmitButton variant={confirmVariant} pendingLabel={pendingLabel}>
               {confirmLabel}
             </SubmitButton>
             <Button type="button" variant="secondary" onClick={() => dialogRef.current?.close()}>
-              Annuler
+              {dismissLabel}
             </Button>
           </div>
         </form>
