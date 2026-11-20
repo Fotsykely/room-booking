@@ -2,13 +2,14 @@ import { CircleX, DoorOpen, User } from "lucide-react";
 import { Badge } from "@/components/badge";
 import { ConfirmAction } from "@/components/confirm-action";
 import type { Reservation } from "@/lib/api-client/types";
-import { formatDay, formatPeriod } from "@/lib/format";
+import { durationInMinutes, formatDuration, formatDay, formatPeriod } from "@/lib/format";
 import { cancelReservationAction } from "../../reservations/actions";
 
 // A booking in the planning. Only a confirmed one can be cancelled; a cancelled one (shown on request)
 // keeps its text and gets a badge, so the status is never told by a colour alone.
 export function ReservationCard({ reservation }: { reservation: Reservation }) {
   const period = formatPeriod(reservation.startsAt, reservation.endsAt);
+  const duration = formatDuration(durationInMinutes(reservation.startsAt, reservation.endsAt));
   const isCancelled = reservation.status === "Cancelled";
 
   return (
@@ -16,6 +17,7 @@ export function ReservationCard({ reservation }: { reservation: Reservation }) {
       <div className="min-w-0">
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 font-semibold">
           {period}
+          <span className="text-sm text-muted-foreground">{duration}</span>
           {isCancelled && <Badge tone="danger">Annulée</Badge>}
         </p>
         <p className="mt-1 break-words">{reservation.purpose}</p>

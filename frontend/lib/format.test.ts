@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { formatCapacity, formatDay, formatFloor, formatPeriod, formatTime, getRoomStatus } from "./format";
+
+import { durationInMinutes, formatCapacity, formatDay, formatDuration, formatFloor, formatPeriod, formatTime, getRoomStatus } from "./format";
 
 describe("room status", () => {
   it("is inactive whatever the availability, because an inactive room cannot be booked", () => {
@@ -43,6 +44,27 @@ describe("dates and times", () => {
 
   it("adds the end day when the booking runs past midnight", () => {
     expect(formatPeriod("2026-11-20T23:00:00", "2026-11-21T01:00:00")).toBe("23:00 – 01:00 (le 21 nov. 2026)");
+  });
+});
+
+describe("durations", () => {
+  it("counts the minutes between two times of the same day", () => {
+    expect(durationInMinutes("2026-11-20T14:00:00", "2026-11-20T15:30:00")).toBe(90);
+  });
+
+  it("counts across midnight", () => {
+    expect(durationInMinutes("2026-11-20T23:00:00", "2026-11-21T01:00:00")).toBe(120);
+  });
+
+  it.each([
+    [5, "5 min"],
+    [45, "45 min"],
+    [60, "1 h"],
+    [90, "1 h 30"],
+    [120, "2 h"],
+    [125, "2 h 05"],
+  ])("writes %i minutes as %s", (minutes, expected) => {
+    expect(formatDuration(minutes)).toBe(expected);
   });
 });
 

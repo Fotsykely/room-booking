@@ -50,6 +50,21 @@ export function formatPeriod(startsAt: string, endsAt: string): string {
   return startsAt.slice(0, 10) === endsAt.slice(0, 10) ? period : `${period} (le ${formatDate(endsAt)})`;
 }
 
+//  Minutes between two local times
+export function durationInMinutes(startsAt: string, endsAt: string): number {
+  return Math.round((new Date(endsAt).getTime() - new Date(startsAt).getTime()) / 60_000);
+}
+
+// 45 -> "45 min", 120 -> "2 h", 90 -> "1 h 30", 125 -> "2 h 05"
+export function formatDuration(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  if (hours === 0) return `${minutes} min`;
+  if (minutes === 0) return `${hours} h`;
+  return `${hours} h ${String(minutes).padStart(2, "0")}`;
+}
+
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", { dateStyle: "medium" });
 
 // Accepts a full ISO date and time ("2026-11-17T15:39:33Z") or a plain date ("2026-12-31").
