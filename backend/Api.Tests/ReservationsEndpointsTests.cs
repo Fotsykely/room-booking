@@ -13,6 +13,9 @@ public class ReservationsEndpointsTests
     private static readonly DateTime Now = new(2030, 6, 15, 10, 0, 0);
     private static readonly DateTime Tomorrow = Now.Date.AddDays(1);
 
+    // Hour 24 is midnight at the end of tomorrow: TomorrowAt(24, 30) is 00:30 the day after.
+    private static DateTime TomorrowAt(int hour, int minute = 0) => Tomorrow.AddHours(hour).AddMinutes(minute);
+
     private readonly ApiFactory _factory;
     private readonly HttpClient _client;
 
@@ -87,6 +90,52 @@ public class ReservationsEndpointsTests
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         else
             Assert.Equal("Une réservation dure au maximum 4 heures.", await ErrorOnAsync(response, "EndsAt"));
+    }
+
+    // ---- Rule: a booking starts between 8:00 and 20:00 (both included) and ends by midnight at the latest
+    // Every duration below is between 2 and 5 hours, so the duration rules never hide the one under test.
+
+    [Theory]
+    [InlineData(8, 0, 10, 0)]    // first possible start
+    [InlineData(20, 0, 22, 0)]   // last possible start (20:00 included); it ends after 20:00, which is allowed
+    [InlineData(19, 0, 24, 0)]   // ends exactly at midnight: allowed
+    public async Task A_booking_that_starts_between_8_and_20_and_ends_by_midnight_is_accepted(
+        int startHour, int startMinute, int endHour, int endMinute)
+    {
+        var (room, member) = await CreateRoomAndMemberAsync();
+
+        var response = await BookAsync(room.Id, member.Id, TomorrowAt(startHour, startMinute), TomorrowAt(endHour, endMinute));
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(7, 59, 10, 0)]   // one minute before the first possible start
+    [InlineData(20, 1, 22, 1)]   // one minute after the last possible start
+    public async Task A_booking_that_starts_outside_8_to_20_is_refused_under_the_start_field(
+        int startHour, int startMinute, int endHour, int endMinute)
+    {
+        var (room, member) = await CreateRoomAndMemberAsync();
+
+        var response = await BookAsync(room.Id, member.Id, TomorrowAt(startHour, startMinute), TomorrowAt(endHour, endMinute));
+
+        // The message tells the allowed hours (it only checks the times, not the exact wording).
+        var message = await ErrorOnAsync(response, "StartsAt");
+        Assert.Contains("08:00", message);
+        Assert.Contains("20:00", message);
+    }
+
+    [Theory]
+    [InlineData(19, 30, 24, 30)]  // 5 hours, ends 30 minutes after midnight
+    [InlineData(19, 1, 24, 1)]    // ends one minute after midnight
+    public async Task A_booking_that_ends_after_midnight_is_refused_under_the_end_field(
+        int startHour, int startMinute, int endHour, int endMinute)
+    {
+        var (room, member) = await CreateRoomAndMemberAsync();
+
+        var response = await BookAsync(room.Id, member.Id, TomorrowAt(startHour, startMinute), TomorrowAt(endHour, endMinute));
+
+        Assert.Contains("minuit", await ErrorOnAsync(response, "EndsAt"));
     }
 
     // ---- Rule: a booking cannot start in the past
@@ -179,12 +228,14 @@ public class ReservationsEndpointsTests
     public async Task The_overlap_message_gives_both_days_when_the_existing_booking_runs_past_midnight()
     {
         var room = await CreateRoomAsync();
-        var late = Tomorrow.AddHours(23); // 23:00 - 01:00 the next day
-        await BookOkAsync(room.Id, (await CreateMemberAsync()).Id, late, late.AddHours(2));
+        // A booking that runs past midnight cannot be created any more, but data from before the rule can exist:
+        // it is inserted directly. 18:00 to 02:00 the next day.
+        var late = Tomorrow.AddHours(18);
+        await InsertReservationAsync(room.Id, (await CreateMemberAsync()).Id, late, late.AddHours(8), ReservationStatus.Confirmed);
 
-        var response = await BookAsync(room.Id, (await CreateMemberAsync()).Id, late.AddMinutes(30), late.AddMinutes(90));
+        var response = await BookAsync(room.Id, (await CreateMemberAsync()).Id, late, late.AddHours(2));
 
-        Assert.Equal("Cette salle est déjà réservée du 16/06/2030 à 23:00 au 17/06/2030 à 01:00.",
+        Assert.Equal("Cette salle est déjà réservée du 16/06/2030 à 18:00 au 17/06/2030 à 02:00.",
             await ErrorOnAsync(response, "RoomId"));
     }
 
@@ -366,12 +417,14 @@ public class ReservationsEndpointsTests
     public async Task A_booking_running_past_midnight_belongs_to_its_start_day()
     {
         var (room, member) = await CreateRoomAndMemberAsync();
-        var booking = await BookOkAsync(room.Id, member.Id, Tomorrow.AddHours(23), Tomorrow.AddHours(25));
+        // Cannot be created through the API any more (it ends after midnight), but data from before the rule can
+        // exist: it is inserted directly.
+        await InsertReservationAsync(room.Id, member.Id, Tomorrow.AddHours(23), Tomorrow.AddHours(25), ReservationStatus.Confirmed);
 
         var startDay = await ListAsync($"?roomId={room.Id}&date={Tomorrow:yyyy-MM-dd}");
         var nextDay = await ListAsync($"?roomId={room.Id}&date={Tomorrow.AddDays(1):yyyy-MM-dd}");
 
-        Assert.Equal([booking.Id], startDay.Select(r => r.Id).ToArray());
+        Assert.Single(startDay);
         Assert.Empty(nextDay);
     }
 

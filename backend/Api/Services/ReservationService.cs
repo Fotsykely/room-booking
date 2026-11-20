@@ -15,6 +15,8 @@ public class ReservationService(AppDbContext db, TimeProvider time)
 {
     public static readonly TimeSpan MaxDuration = TimeSpan.FromHours(5);
     public static readonly TimeSpan MinDuration = TimeSpan.FromHours(2);
+    public static readonly TimeOnly FirstStart = new(8, 0); // 08:00
+    public static readonly TimeOnly StartDeadline = new(20, 0); // 20:00
     public const int StandardMemberUpcomingLimit = 3;
 
     private const string MemberField = nameof(ReservationRequestDto.MemberId);
@@ -29,7 +31,8 @@ public class ReservationService(AppDbContext db, TimeProvider time)
         var errors = new Dictionary<string, string>();
 
         CheckPeriod(startsAt, endsAt, now, errors);
-
+        CheckOpeningHours(startsAt, endsAt, errors);
+        
         // READ COMMITTED: every query reads the latest committed data, so the checks below always see the bookings
         // committed by the requests that held the locks before us, whatever this transaction did earlier. (MySQL's
         // default REPEATABLE READ would also work today, because the first statements are locking reads; this level
@@ -92,6 +95,17 @@ public class ReservationService(AppDbContext db, TimeProvider time)
             errors[EndField] = $"Une réservation dure au maximum {MaxDuration.TotalHours:0} heures.";
         else if (endsAt - startsAt < MinDuration)
             errors[EndField] = $"Une réservation dure au minimum {MinDuration.TotalHours:0} heures.";
+    }
+
+    private static void CheckOpeningHours(DateTime startsAt, DateTime endsAt, Dictionary<string, string> errors)
+    {
+        var start = TimeOnly.FromDateTime(startsAt);
+        if (start < FirstStart || start > StartDeadline)
+            errors.TryAdd(StartField, $"Une réservation ne peut commencer qu'entre {FirstStart:HH:mm} et {StartDeadline:HH:mm}.");
+
+        // Midnight is the start of the next day: a date comparison, TimeOfDay would ignore the day.
+        if (endsAt > startsAt.Date.AddDays(1))
+            errors.TryAdd(EndField, "Une réservation ne peut se terminer qu'à minuit ou avant.");
     }
 
     // Periods are half-open [start, end): a reservation ending at 14:00 does not overlap one starting at 14:00.
